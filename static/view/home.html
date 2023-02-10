@@ -1,0 +1,911 @@
+<html>
+
+<head>
+  <script src="/static/js/jquery-3.2.1.min.js"></script>
+  <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+
+  <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+    crossorigin="anonymous">
+
+  <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+
+  <!-- crypto-js包 -->
+  <script  type="text/javascript" src="../js/crypto-js.js"></script>
+
+  <!--sm4所需js-->
+  <script src="../gmjs/js/utils/hex.js"></script>
+  <script src="../gmjs/js/utils/byteUtil.js"></script> 
+  <script src="../gmjs/js/crypto/sm4-1.0.js"></script>
+
+  <!--生成密钥js-->
+  <script src="../gmjs/js/ext/jsbn.js"></script>
+  <script src="../gmjs/js/ext/jsbn2.js"></script>
+  <script src="../gmjs/js/ext/prng4.js"></script>
+  <script src="../gmjs/js/ext/rng.js"></script>
+
+  <!-- sm3最少依赖包 -->
+	<script src="../gmjs/js/crypto/sm3-1.0.js"></script>
+
+	<!-- 这部分包+sm3最少依赖包=sm2需要包	-->
+	<script src="../gmjs/js/ext/ec.js"></script>
+	<script src="../gmjs/js/ext/ec-patch.js"></script>
+	<script src="../gmjs/js/crypto/sm2-1.0.js"></script>
+
+  <script src="/static/js/auth.js"></script>
+
+  <link rel="stylesheet" href="../../static/css/dialog.css">
+</head>
+
+<body style="width:100%;height:100%">
+  <div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
+    <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
+      <tbody>
+        <tr style="margin-bottom: 20px;">
+          <td style="width:12%;height: 100%;background: #006DCC;">
+            <div style="text-align: top;height:20%;margin: 20px 0 0 10px;">
+              <center>
+                <img style="width:80px;height:80px;border-radius:40px;" src="/static/img/avatar.jpeg"></img><br>
+              </center>
+              <span style="font-weight:bold;color:rgb(255, 255, 255)">用户名: </span>
+              <p id="username" style="color: rgb(232, 225, 23)"></p>
+              <span style="font-weight:bold;color:rgb(255, 255, 255)">注册时间: </span>
+              <p id="regtime" style="color: rgb(232, 225, 23)"></p>
+            </div>
+            <div style="height: 70%;margin: 20px 0 0 10px;">
+              <center><button onclick="toUploadFile()" style="margin:10 auto" class="functionbtn">上传文件
+              </button></center>
+              <center><button onclick="document.getElementById('friendreq').style.display='block';" style="margin:10 auto" class="functionbtn">好友申请
+              </button></center> 
+              <div id="friendreq" class="dialog">
+                <div class="content">
+                  <div class="aclose">
+                    <span>好友申请</span>
+                    <a class="close" href="javascript:void(0);" onclick="document.getElementById('friendreq').style.display='none';">&times;</a>
+                  </div>
+                  <div class="contain">
+                    <table id="friendsreqtbl" style="margin-left: 25%;width:60%;table-layout:fixed;word-break:break-all;text-align: center;">
+                      <tbody style="display: block;height: 230px;overflow-y: scroll;">
+                        <tr style="height:50px;border:1px;">
+                          <th style="vertical-align:middle !important;text-align: center;" width="120">用户名</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="180">操作</th>
+                        </tr>
+                      </tbody>
+                      <!-- <thead style="height:50px;border:1px;">
+                      </thead> -->
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <center><button onclick="document.getElementById('sharefilelist').style.display='block';"  style="margin:10 auto" class="functionbtn">文件共享
+              </button></center>
+              <div id="sharefilelist" class="dialog">
+                <div class="shareContent">
+                  <a class="close" href="javascript:void(0);" onclick="document.getElementById('sharefilelist').style.display='none';">&times;</a>
+                  <div class="shareAclose">
+                    <span>文件共享</span>
+                  </div>
+                  <div class="shareContain">
+                    <table id="sharefiletbl" style="width:100%;table-layout:fixed;word-break:break-all;text-align: center;">
+                      <tbody style="display: block;height: 230px;overflow-y: scroll;">
+                        <tr style="height:50px;border:1px;">
+                          <th style="vertical-align:middle !important;text-align: center;" width="200">文件hash</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="250">文件名</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="150">文件大小</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="100">分享人</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="200">操作</th>
+                        </tr>
+                      </tbody>
+                      <!-- <thead style="height:50px;border:1px;">
+                      </thead> -->
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <center><button onclick="document.getElementById('friendlist').style.display='block';" style="margin:10 auto" class="functionbtn">好友列表
+              </button></center>
+              <div id="friendlist" class="dialog">
+                <div class="content">
+                  <div class="aclose">
+                    <span>好友列表</span>
+                    <a class="close" href="javascript:void(0);" onclick="document.getElementById('friendlist').style.display='none';">&times;</a>
+                  </div>
+                  <div class="contain">
+                    <table id="friendstbl" style="margin-left: 25%;width:60%;table-layout:fixed;word-break:break-all;text-align: center;">
+                      <tbody style="display: block;height: 230px;overflow-y: scroll;">
+                        <tr style="height:50px;border:1px;">
+                          <th style="vertical-align:middle !important;text-align: center;" width="120">用户名</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="180">操作</th>
+                        </tr>
+                      </tbody>
+                      <!-- <thead style="height:50px;border:1px;">
+                      </thead> -->
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div id="shareuserslist" class="dialog">
+                <div class="content">
+                  <div class="aclose">
+                    <span>选择用户</span>
+                    <a class="close" href="javascript:void(0);" onclick="document.getElementById('shareuserslist').style.display='none';">&times;</a>
+                  </div>
+                  <div class="contain">
+                    <table id="selectusertble" style="margin-left: 25%; width:60%;height: 75%; table-layout:fixed;word-break:break-all;text-align: center;">
+                      <tbody style="display: block;height: 185px;overflow-y: scroll;">
+                        <tr style="height:50px;border:1px;">
+                          <th style="vertical-align:middle !important;text-align: center;" width="120">用户名</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="120"><input id="js-all-checkbox" type="checkbox" onclick="checkAll(this)"></th>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table style="width:50%;height:30px;margin-left: 25%;margin-bottom: 1%;">
+                      <tbody>
+                        <td style="text-align: center;">
+                          <button class="btn btn-success" style="width:100px;height:30px;margin:5px 0;" onClick = 'shareFile()'>确认</button>
+                        </td>
+                        <td style="text-align: center;">
+                          <button class="btn btn-primary" style="width:100px;height:30px;margin:5px 0;" onclick="document.getElementById('shareuserslist').style.display='none';">取消</button>
+                        </td>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <center><button onclick="document.getElementById('addfriend').style.display='block';" style="margin:10 auto" class="functionbtn">添加好友
+              </button></center>
+              <div id="addfriend" class="dialog">
+                <div class="content">
+                  <div class="aclose">
+                    <span>添加好友</span>
+                    <a class="close" href="javascript:void(0);" onclick="document.getElementById('addfriend').style.display='none';">&times;</a>
+                  </div>
+                  <div class="contain">
+                    <table style="width:100%;">
+                      <tbody>
+                        <td style="text-align: center;">
+                          <label for="recipient" class="l"> 用户名:</label>
+                        </td>
+                        <td style="width: 250px;">
+                          <input id="recipient" type="text" style="height:30px;width:250px;padding-right:50px;">
+                        </td>
+                        <td style="text-align: center;">
+                          <a href="javascript:toSearchUser();">搜索</a>
+                        </td>
+                      </tbody>
+                    </table>
+                    <table id="userinfotbl" style="margin-top: 1%;width:100%;table-layout:fixed;word-break:break-all;text-align: center;">
+                      <thead style="height:50px;border:1px;">
+                        <tr style="height:50px;border:1px;">
+                          <th style="vertical-align:middle !important;text-align: center;" width="120">用户名</th>
+                          <th style="vertical-align:middle !important;text-align: center;" width="180">操作</th>
+                        </tr>
+                      </thead> 
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td style="width: 3px;height:100%;">
+            <div style="width:100%;height: 100%;background:rgb(202, 157, 248);"></div>
+          </td>
+          <td style="text-align: center;">
+            <div>
+              <span style= "font-size:20px;font-weight:bold;text-align:center;line-height:5px; ">文件列表</span>
+              <div style="width:100%;height: 1px;background:rgb(202, 157, 248);margin-top: 15px;"></div>
+            </div>
+            <div style="height:95%;" style="width:100%;">
+              <table id="filetbl" style="margin-left: 1%;width:99%;table-layout:fixed;word-break:break-all;text-align: center;">
+                <tbody style="display: block;height: 720px;overflow-y: scroll;">
+                  <tr style="height:50px;border:1px;">
+                    <th style="vertical-align:middle !important;text-align: center;" width="200">文件hash</th>
+                    <th style="vertical-align:middle !important;text-align: center;" width="420">文件名</th>
+                    <th style="vertical-align:middle !important;text-align: center;" width="120">文件大小</th>
+                    <th style="vertical-align:middle !important;text-align: center;" width="180">上传时间</th>
+                    <th style="vertical-align:middle !important;text-align: center;" width="180">最近更新</th>
+                    <th style="vertical-align:middle !important;text-align: center;" width="180">操作</th>
+                  </tr>
+                </tbody>
+                <!-- <thead style="height:50px;border:1px;">        
+                </thead> -->
+              </table>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+
+<script lang="javascript">
+  window.onload = function () {
+    var username = document.getElementById('username');
+    $.ajax({
+      url: "/user/info?" + queryParams(),
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        document.getElementById("username").innerHTML = body.data.Username;
+        document.getElementById("regtime").innerHTML = body.data.SignupAt;
+        updateFileList();
+        toGetFriendsList();
+        toGetFriendMsgs();
+        toGetShareMsgs();
+      }
+    });
+  }
+
+  function updateFileList() {
+    $.ajax({
+      url: "/file/query?" + queryParams(),
+      type: "POST",
+      data: {
+        limit: 15
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (!data) {
+          return;
+        }
+        // var data = JSON.parse(body);
+        if (!data || data.length <= 0) {
+          return;
+        }
+        
+        var downloadHtml = '<button class="btn btn-success" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "downloadFile(\'http://' + window.location.host +
+            '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
+        var shareHtml = '<button class="btn btn-primary" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = shareUsersListShow(\'{0}\')>共享</button>';
+        var deleteFileHtml = '<button class="btn btn-danger" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "deleteFile(\'http://' + window.location.host +
+            '/file/delete?filehash={0}&{1}\')">删除</button>';
+
+        for (var i = 0; i < data.length; i++) {
+          var x = document.getElementById('filetbl').insertRow();
+          var cell = x.insertCell();
+          cell.innerHTML = data[i].FileHash.substr(0, 20)+"...";
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].FileName;
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].FileSize;
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].UploadAt;
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].LastUpdated;
+
+          cell = x.insertCell();
+          cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + 
+              shareHtml.format(data[i].FileHash) + 
+              deleteFileHtml.format(data[i].FileHash, queryParams());          
+        }
+      }
+    });
+  }
+
+  function shareUsersListShow(filehash, filename) {
+    document.getElementById('shareuserslist').style.display='block';
+    localStorage.setItem("filehash", filehash);
+  }
+
+  function toUploadFile() {
+    window.location.href = '/file/upload?' + queryParams();
+  }
+
+  function downloadFile(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        try {
+          alert("文件即将下载自: " + body.data.URL);
+          if (body.data.DataKey == "") {
+            var elemIF = document.createElement("iframe");
+            elemIF.src = body.data.URL;
+            elemIF.style.display = "none";
+            document.body.appendChild(elemIF);
+          } else {
+            downloadFileAndDecrypt(body);
+          }
+        } catch (e) {
+          alert(e);
+        }
+      }
+    });
+  }
+
+  function downloadFileAndDecrypt(body) {
+    $.ajax({
+      url: body.data.URL,
+      type: "GET",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+          var blob = new Blob([data]);
+          var reader = new FileReader;
+          reader.readAsText(blob);
+          reader.onload = () =>{
+            var filedata = reader.result;
+            var privKey = localStorage.getItem("privkey");
+            var dataKey = SM2_Decrypt(privKey, body.data.DataKey);
+            var decrypted = CryptoJS.AES.decrypt(filedata, dataKey);
+            var typedArray = convertWordArrayToUint8Array(decrypted);
+            var fileDec = new Blob([typedArray]);
+            var a = document.createElement("a");
+            var url = window.URL.createObjectURL(fileDec);
+            var filename = body.data.FileName.substr(4);
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          }
+      }
+    });      
+  }
+
+  function convertWordArrayToUint8Array(wordArray) {
+    var arrayOfWords = wordArray.hasOwnProperty("words") ? wordArray.words : [];
+    var length = wordArray.hasOwnProperty("sigBytes") ? wordArray.sigBytes : arrayOfWords.length * 4;
+    var uInt8Array = new Uint8Array(length), index=0, word, i;
+    for (i=0; i<length; i++) {
+        word = arrayOfWords[i];
+        uInt8Array[index++] = word >> 24;
+        uInt8Array[index++] = (word >> 16) & 0xff;
+        uInt8Array[index++] = (word >> 8) & 0xff;
+        uInt8Array[index++] = word & 0xff;
+    }
+    return uInt8Array;
+}
+
+  function deleteFile(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          alert('已删除');
+          // updateFileList();
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  function toGetFriendMsgs() {
+    $.ajax({
+      url: "/user/queryfriendreq?" + queryParams(),
+      type: "POST",
+      data: {
+        limit: 15
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (!data) {
+          return;
+        }
+        // var data = JSON.parse(body);
+        if (!data || data.length <= 0) {
+          return;
+        }
+
+        var agreeHtml = '<button class="btn btn-success" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "agreeReq(\'http://' + window.location.host +
+            '/user/doaddfriend?resptype=0&sender={0}&{1}\')">同意</button>';
+        var rejectHtml = '<button class="btn btn-danger" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "rejectReq(\'http://' + window.location.host +
+            '/user/doaddfriend?resptype=1&sender={0}&{1}\')">拒绝</button>';
+
+        for (var i = 0; i < data.length; i++) {
+          var x = document.getElementById('friendsreqtbl').insertRow();
+          var cell = x.insertCell();
+          cell.innerHTML = data[i].Username;
+
+          cell = x.insertCell();
+          cell.innerHTML = agreeHtml.format(data[i].Username, queryParams()) + 
+              rejectHtml.format(data[i].Username, queryParams());          
+        }
+      }
+    });
+  }
+
+  function agreeReq(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          alert('申请已通过');
+          $(this).closest('tr').remove();
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  function rejectReq(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          alert('申请已拒绝');
+          // 更新申请表
+          $(this).closest('tr').remove();
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  function toGetFriendsList() {
+    $.ajax({
+      url: "/user/friends?" + queryParams(),
+      type: "POST",
+      data: {
+        limit: 15
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (!data) {
+          return;
+        }
+        // var data = JSON.parse(body);
+        if (!data || data.length <= 0) {
+          return;
+        }
+
+        var deleteFriendHtml = '<button class="btn btn-danger" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "deleteFriend(\'http://' + window.location.host +
+            '/user/deletefriend?friendname={0}&{1}\')">删除</button>';
+
+        var shareUsersHtml = '<input type="checkbox" name="select" value="{0}" onclick="clickCheckbox()">';
+
+        for (var i = 0; i < data.length; i++) {
+          var x = document.getElementById('friendstbl').insertRow();
+          var cell = x.insertCell();
+          cell.innerHTML = data[i].Username;
+
+          cell = x.insertCell();
+          cell.innerHTML = deleteFriendHtml.format(data[i].Username, queryParams());
+        }
+
+        for (var i = 0; i < data.length; i++) {
+          var x = document.getElementById('selectusertble').insertRow();
+          var cell = x.insertCell();
+          cell.innerHTML = data[i].Username;
+
+          cell = x.insertCell();
+          cell.innerHTML = shareUsersHtml.format(data[i].Username);
+        }
+      }
+    });
+  }
+
+  function deleteFriend(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          alert('已删除');
+          updateFileList();
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  function toSearchUser() {  
+    var recipient = document.getElementById('recipient');
+    $.ajax({
+      url: "/user/searchuser?" + queryParams(),
+      type: "POST",
+      data: {
+        "recipient": recipient.value
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code != 0) {
+          return;
+        }
+
+        var friendReqHtml = '<button class="btn btn-success" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "sendReq(\'http://' + window.location.host +
+            '/user/addfriend?recipient={0}&{1}\')">申请好友</button>';
+
+        var x = document.getElementById('userinfotbl').insertRow();
+        var cell = x.insertCell();
+        cell.innerHTML = body.data.Username;
+
+        cell = x.insertCell();
+        cell.innerHTML = friendReqHtml.format(body.data.Username, queryParams());        
+      }
+    });
+  }
+
+  function sendReq(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          alert('发送成功');
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  function shareFile() {
+    var checkUsers = [];
+    var allCheckDomArr = document.getElementById('selectusertble').getElementsByTagName('input');
+    var len = allCheckDomArr.length;
+    for (var i = 1; i < len; i++) {
+      if (allCheckDomArr[i].checked) {
+        checkUsers.push(allCheckDomArr[i].value);
+      } 
+    }
+
+    $.ajax({
+      url: "/user/getrecipientpubkey?" + queryParams() + shareFileInfo(),
+      type: "POST",
+      traditional:true,
+      data: {
+        "checkusers": checkUsers
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {   // 未加密
+          normolShare(checkUsers, body.data.PubKeys)
+        } else if (body.code == 1) {
+          encryptShare(checkUsers, body.data.PubKeys, body.data.DataKey)
+        } else {
+          alert(body.msg)
+        }
+      }
+    });   
+  }
+
+  function normolShare(checkUsers, shareKeys) {
+    $.ajax({
+      url: "/user/sharemsg?" + queryParams() + shareFileInfo(),
+      type: "POST",
+      traditional:true,
+      data: {
+        "checkusers": checkUsers,
+        "sharekeys": shareKeys
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (data.code == 0) {
+          alert("发送成功");
+        } else {
+          alert("系统错误");
+        }
+      }
+    });
+  }
+
+  function encryptShare(checkUsers, pubKeys, dataKey) {
+    var privKey = localStorage.getItem("privkey");
+    var dataKeyPlain = SM2_Decrypt(privKey, dataKey);
+    var shareKeys = [];
+    for (var i = 0; i < pubKeys.length; i++) {
+      var dataKeyCipher = SM2_Encrypt(pubKeys[i], dataKeyPlain);
+      shareKeys.push(dataKeyCipher);
+    }
+
+    $.ajax({
+      url: "/user/sharemsg?" + queryParams() + shareFileInfo(),
+      type: "POST",
+      traditional:true,
+      data: {
+        "checkusers": checkUsers,
+        "sharekeys": shareKeys
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (data.code == 0) {
+          alert("发送成功");
+        } else {
+          alert("系统错误");
+        }
+      }
+    });
+  }
+
+  function clickCheckbox() {
+    var allCheckbox = document.getElementById('js-all-checkbox');
+    var allCheckDomArr = document.getElementById('selectusertble').getElementsByTagName('input')
+    var len = allCheckDomArr.length;
+    for (var i = 1; i < len; i++) {
+      if (!allCheckDomArr[i].checked) {
+        if (allCheckbox.checked) allCheckbox.checked = false;
+        break;
+      } else if (i == len - 1) {
+        allCheckbox.checked = true;
+        return;
+      }
+    }
+  }
+
+  function checkAll (current) {
+    var allCheckDomArr = document.getElementById('selectusertble').getElementsByTagName('input')
+    var len = allCheckDomArr.length
+    if (!current.checked) { 
+      for (var i = 1; i < len; i++) {
+        var checkStatus = allCheckDomArr[i].checked
+        if (checkStatus) allCheckDomArr[i].checked = false
+      }
+    } else {
+      for (var i = 1; i < len; i++) {
+        var checkStatus = allCheckDomArr[i].checked
+        if (!checkStatus) allCheckDomArr[i].checked = true
+      }
+    }
+  }
+
+  /** 获取文件共享消息· **/
+  function toGetShareMsgs() {
+    $.ajax({
+      url: "/user/querysharemsg?" + queryParams(),
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (!data) {
+          return;
+      }
+        // var data = JSON.parse(body);
+        if (!data || data.length <= 0) {
+          return;
+      }
+
+        var saveHtml = '<button class="btn btn-success" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "saveResp(\'http://' + window.location.host +
+            '/file/saveshare?filehash={0}&filename={1}&filesize={2}&sender={3}&{4}\')">保存</button>';
+        var downloadHtml = '<button class="btn btn-primary" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "downloadFile(\'http://' + window.location.host +
+            '/file/downloadurl?filehash={0}&sender={1}&{2}\')">下载</button>';
+        var ignoreHtml = '<button class="btn btn-danger" ' +
+            'style="height:30px;margin:5px 0;"' +
+            'onClick = "ignoreResp(\'http://' + window.location.host +
+            '/file/shareignore?filehash={0}&sender={1}&{2}\')">忽略</button>';
+
+        for (var i = 0; i < data.length; i++) {
+          var x = document.getElementById('sharefiletbl').insertRow();
+          var cell = x.insertCell();
+          cell.innerHTML = data[i].FileHash.substr(0, 20)+"...";
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].FileName.substr(0, 20)+"...";
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].FileSize;
+
+          cell = x.insertCell();
+          cell.innerHTML = data[i].Sender;
+
+          cell = x.insertCell();
+          cell.innerHTML = saveHtml.format(data[i].FileHash, data[i].FileName, data[i].FileSize, data[i].Sender, queryParams()) + 
+              downloadHtml.format(data[i].FileHash, data[i].Sender, queryParams()) + 
+              ignoreHtml.format(data[i].FileHash, data[i].Sender, queryParams());          
+       }
+      }
+    });
+  }
+  
+  /** 保存文件 **/
+  function saveResp(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (data.code == 0) {
+          alert('保存成功');
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  /** 忽略文件分享 **/
+  function ignoreResp(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (data, textStatus, jqXHR) {
+        if (data.code == 0) {
+          alert('操作成功');
+        } else {
+          alert('系统错误');
+        }
+      }
+    });
+  }
+
+  /** SM2解密 **/
+  function SM2_Decrypt(privkey, inputtext) {
+			if(privkey == "" || privkey.length < 32){
+				alert("私钥为空或错误");
+			}
+
+			if(inputtext.length <= 0){
+				alert("输入数据不能为空");
+			}
+                
+      //sm2解密
+      var sm2 = new SM2();
+      var plain = sm2.decrypt(privkey,inputtext);     
+			var utf8Str = Hex.hexToUtf8Str(plain);
+      return utf8Str;
+  }
+
+  /** SM2加密 **/
+  function SM2_Encrypt(pubkey, dataText){
+			if(pubkey == "" || pubkey.length < 64){
+				alert("公钥为空或错误");
+			}
+			if(dataText.length <= 0){
+				alert("输入数据不能为空");
+			}
+			var sm2DataHex = Hex.utf8StrToHex(dataText); //转成byte数组
+      console.log(sm2DataHex);
+                
+      //sm2加密
+      var sm2 = new SM2();
+      var cipher = sm2.encrypt(pubkey,sm2DataHex);//函数输入输出都是16进制数据
+      return cipher;
+  }
+
+  /** SM4 cbc解密 **/
+  function SM4_CBC_Decrypt(data, keytext, ivtext) {
+				var dataBytes = Hex.decode(data);
+				var key = Hex.decode(keytext);
+				var iv = Hex.decode(ivtext);
+				
+				var sm4 = new SM4();
+				var plain = sm4.decrypt_cbc(key,iv,dataBytes);				
+        return Hex.bytesToUtf8Str(plain);
+  }
+</script>
+
+</html>

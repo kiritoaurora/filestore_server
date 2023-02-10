@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片渐变登录</title>
+ 
+    <script src="/static/js/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" href="../../static/css/login.css" type="text/css">
+ 
+ 
+</head>
+ 
+<body class="backgroundUrl_body">
+    <div id="form">
+        <form action="index.html" class="login-form">
+            <h1>登录</h1>
+ 
+            <div class="txtb">
+                <input type="text" />
+                <span data-placeholder="Username"></span>
+            </div>
+            <div class="txtb">
+                <input type="password" />
+                <span data-placeholder="Password"></span>
+            </div>
+            <input type="submit" class="logbtn" value="登录" />
+ 
+            <div class="bottom-text">
+                <span class="span-text">Don't hava account?</span><a href="#">Sign up</a>
+            </div>
+        </form>
+    </div>
+ 
+ 
+    <script type="text/javascript">
+        $(function () {
+            let arr = ['backgroundUrl_body', 'backgroundUrl_body1', 'backgroundUrl_body2',
+                'backgroundUrl_body3'];
+            let i = 0;
+            setInterval(
+                function () {
+                    i++;
+                    $(".backgroundUrl_body").addClass(arr[i]);
+                    if (i >= 4) {
+                        i = 0;
+                        $(".backgroundUrl_body").removeClass(
+                            'backgroundUrl_body1 backgroundUrl_body2 backgroundUrl_body3')
+                    }
+                },
+                3000
+            );
+        })
+ 
+ 
+        // 当输入框获得焦点时给其添加focus类达到
+        // 字体上移及横线颜色波动效果
+        $(".txtb input").on("focus", function () {
+            $(this).addClass("focus");
+        });
+ 
+        // 当输入框时区焦点时将类移除以消除效果
+        $(".txtb input").on("blur", function () {
+            if ($(this).val() == "")
+                $(this).removeClass("focus");
+ 
+        });
+    </script>
+</body>
+ 
+</html>

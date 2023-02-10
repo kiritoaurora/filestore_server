@@ -1,0 +1,127 @@
+<html>
+
+<head>
+  <script src="/static/js/jquery-3.2.1.min.js"></script>
+  <link rel="stylesheet" href="../../static/css/login.css" type="text/css">
+  <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+
+  <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+    crossorigin="anonymous">
+
+  <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+  
+
+  <!-- crypto-js包 -->
+  <script  type="text/javascript" src="../js/crypto-js.js"></script>
+  <!--sm4所需js-->
+  <script src="../gmjs/js/utils/hex.js"></script>
+  <script src="../gmjs/js/utils/byteUtil.js"></script> 
+  <script src="../gmjs/js/crypto/sm4-1.0.js"></script>
+
+  <!--生成密钥js-->
+  <script src="../gmjs/js/ext/jsbn.js"></script>
+  <script src="../gmjs/js/ext/jsbn2.js"></script>
+  <script src="../gmjs/js/ext/prng4.js"></script>
+  <script src="../gmjs/js/ext/rng.js"></script>
+
+  <!-- sm3最少依赖包 -->
+	<script src="../gmjs/js/crypto/sm3-1.0.js"></script>
+
+	<!-- 这部分包+sm3最少依赖包=sm2需要包	-->
+	<script src="../gmjs/js/ext/ec.js"></script>
+	<script src="../gmjs/js/ext/ec-patch.js"></script>
+	<script src="../gmjs/js/crypto/sm2-1.0.js"></script>
+</head>
+
+<body class="backgroundUrl_body">
+  <div id="form">
+    <form class="login-form">
+        <h1>登录</h1>
+        <div class="txtb">
+            <input id="username" type="text" />
+            <span data-placeholder="Username"></span>
+        </div>
+        <div class="txtb">
+            <input id="password" type="password" />
+            <span data-placeholder="Password"></span>
+        </div>
+        <input type="submit" class="logbtn" value="登录" onclick='onSignin()'/>
+        <div class="bottom-text">
+            <span class="span-text">Don't hava account?</span><a onclick='onSignup()'>Sign up</a>
+        </div>
+    </form>
+</div>
+</body>
+
+<script lang="javascript">
+  // 字体上移及横线颜色波动效果
+  $(".txtb input").on("focus", function () {
+    $(this).addClass("focus");
+  });
+  $(".txtb input").on("blur", function () {
+  if ($(this).val() == "")
+    $(this).removeClass("focus");
+  });
+
+  function onSignin() {
+    var username = document.getElementById('username');
+    var password = document.getElementById('password');
+    var passHash = CryptoJS.MD5(password.value).toString().toUpperCase();
+    $.ajax({
+      url: "/user/signin",
+      type: "POST",
+      data: {
+        "username": username.value,
+        "password": passHash
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        if (body.code == 0) {
+          localStorage.setItem("token", body.data.Token);
+          localStorage.setItem("username", body.data.Username);
+          localStorage.setItem("pubkey", body.data.PubKey);
+          // 生成口令密钥
+          var passKey = CryptoJS.PBKDF2(password.value,username.value,{keySize:128/32}).toString().toUpperCase();
+		      // 偏移量
+          var iv = "123456789abcdef123456789abcdef12";
+          var privKey = SM4_CBC_Decrypt(body.data.PrivKey, passKey, iv);
+          localStorage.setItem("privkey", privKey);
+          window.location.href = body.data.Location;
+        } else if (body.code == -1) {
+          alert("密码错误");
+        } else {
+          alert("系统错误");
+        }
+      }
+    });
+  }
+
+  function onSignup() {
+    window.location.href = "/static/view/signup.html";
+  }
+
+  /** SM4 cbc解密 **/
+  function SM4_CBC_Decrypt(data, keytext, ivtext) {
+				var dataBytes = Hex.decode(data);
+				var key = Hex.decode(keytext);
+				var iv = Hex.decode(ivtext);
+				
+				var sm4 = new SM4();
+				var plain = sm4.decrypt_cbc(key,iv,dataBytes);				
+        return Hex.bytesToUtf8Str(plain);
+  }
+
+</script>
+
+</html>
