@@ -41,6 +41,12 @@ func Router() *gin.Engine {
 	// 秒传接口
 	router.POST("/file/fastupload", handler.TryFastUploadHandler)	
 
+	// 分块上传接口
+	router.POST("/file/mpupload/init", handler.InitiateMultipartUploadHandler)
+	router.POST("/file/mpupload/uppart", handler.UploadPartHandler)
+	router.POST("/file/mpupload/complete", handler.CompleteUploadHanlder)
+
+
 	// 用户相关接口
 	router.POST("/user/info", handler.UserInfoHandler)
 	router.POST("/user/friends", handler.UserFriendsHandler)
